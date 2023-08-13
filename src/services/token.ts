@@ -1,0 +1,1 @@
+export const IEX_TOKEN: string = 'sk_2efd82e1ba3544129e75b23f1dc24ba5';

@@ -7,46 +7,12 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
-import Skeleton from "@mui/material/Skeleton";
 import { useGetStocksQuery } from "../../services/api";
-import { formatTimestamp } from "../../utils/formatTimestamp";
-import {
-  DragDropContext,
-  Draggable,
-  Droppable,
-  DropResult,
-} from "react-beautiful-dnd";
-
-interface Column {
-  id: keyof Data;
-  label: string;
-  minWidth?: number;
-  align?: "right";
-  format?: (value: number) => string;
-}
-
-interface Data {
-  symbol: string;
-  sector: string;
-  securityType: string;
-  bidPrice: number;
-  bidSize: number;
-  askPrice: number;
-  askSize: number;
-  lastUpdated: number;
-  lastSalePrice: number;
-  lastSaleSize: number;
-  lastSaleTime: number;
-  volume: number;
-}
-
-const columns: readonly Column[] = [
-  { id: "symbol", label: "Symbol", minWidth: 100 },
-  { id: "lastSalePrice", label: "Last Sale Price", minWidth: 170 },
-  { id: "lastUpdated", label: "Last Updated", minWidth: 170 },
-  { id: "sector", label: "Sector", minWidth: 170 },
-  { id: "securityType", label: "Security Type", minWidth: 170 },
-];
+import { Data, columns } from "../ColumnDefinitions";
+import { DragDropContext, Droppable, DropResult } from "react-beautiful-dnd";
+import { SkeletonData } from "./SkeletonDataPage/SkeletonData";
+import { UploadedData } from "./UploadedDataPage/UploadedData";
+import { ErrorPage } from "./ErrorPage/ErrorPage";
 
 export const StickyHeadTable = () => {
   const [page, setPage] = React.useState(0);
@@ -82,7 +48,7 @@ export const StickyHeadTable = () => {
   };
 
   if (error) {
-    return <div>Непредвиденная ошибка</div>;
+    return <ErrorPage />;
   }
 
   const visibleData = allData.slice(
@@ -91,7 +57,7 @@ export const StickyHeadTable = () => {
   );
 
   return (
-    <Paper sx={{ width: "100%", overflow: "hidden" }}>
+    <Paper elevation={3} sx={{ width: "100%", overflow: "hidden" }}>
       <TableContainer sx={{ maxHeight: 600 }}>
         <DragDropContext onDragEnd={handleDragEnd}>
           <Table stickyHeader aria-label="sticky table">
@@ -112,59 +78,9 @@ export const StickyHeadTable = () => {
               {(provided) => (
                 <TableBody {...provided.droppableProps} ref={provided.innerRef}>
                   {isLoading ? (
-                    Array.from({ length: rowsPerPage }).map((_, index) => (
-                      <TableRow key={index}>
-                        {columns.map((column) => (
-                          <TableCell key={column.id} align={column.align}>
-                            <Skeleton variant="text" />
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
+                    <SkeletonData rowsPerPage={rowsPerPage} />
                   ) : (
-                    <>
-                      {visibleData.map((row: Data, index) => (
-                        <Draggable
-                          key={row.symbol}
-                          draggableId={row.symbol}
-                          index={index}
-                          shouldRespectForcePress
-                        >
-                          {(provided) => (
-                            <TableRow
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              sx={{
-                                ...provided.draggableProps.style,
-                                width: "100%",
-                              }}
-                              hover
-                              role="checkbox"
-                              tabIndex={-1}
-                              key={row.symbol}
-                              ref={provided.innerRef}
-                            >
-                              {columns.map((column) => {
-                                const value = row[column.id];
-                                return (
-                                  <TableCell
-                                    key={column.id}
-                                    align={column.align}
-                                  >
-                                    {column.id === "lastUpdated"
-                                      ? formatTimestamp(value as number)
-                                      : column.format &&
-                                        typeof value === "number"
-                                      ? column.format(value)
-                                      : value}
-                                  </TableCell>
-                                );
-                              })}
-                            </TableRow>
-                          )}
-                        </Draggable>
-                      ))}
-                    </>
+                    <UploadedData visibleData={visibleData} />
                   )}
                   {provided.placeholder}
                 </TableBody>

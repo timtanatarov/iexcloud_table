@@ -4,21 +4,23 @@ import { Grid, Typography } from "@mui/material";
 function App() {
   return (
     <>
-      <Grid
-        container
-        direction="column"
-        sx={{ textAlign: "center", margin: "0 auto", alignItems: "center", backgroundColor: '#f5f5f5' }}
-      >
-        <Grid item sx={{ marginTop: "20px" }}>
-          <Typography variant="h4">Stock Tracker</Typography>
-        </Grid>
         <Grid
-          item
-          sx={{ marginTop: "20px", }}
+          container
+          direction="column"
+          sx={{
+            textAlign: "center",
+            margin: "0 auto",
+            alignItems: "center",
+            minHeight: "100vh",
+          }}
         >
-          <StickyHeadTable />
+          <Grid item sx={{ marginTop: "20px" }}>
+            <Typography variant="h4">Stock Tracker</Typography>
+          </Grid>
+          <Grid item sx={{ marginTop: "20px" }}>
+            <StickyHeadTable />
+          </Grid>
         </Grid>
-      </Grid>
     </>
   );
 }
