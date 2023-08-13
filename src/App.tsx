@@ -1,25 +1,25 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { StickyHeadTable } from "./components/StickyHeadTable";
+import { Grid, Typography } from "@mui/material";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+    <>
+      <Grid
+        container
+        direction="column"
+        sx={{ textAlign: "center", margin: "0 auto", alignItems: "center", backgroundColor: '#f5f5f5' }}
+      >
+        <Grid item sx={{ marginTop: "20px" }}>
+          <Typography variant="h4">Stock Tracker</Typography>
+        </Grid>
+        <Grid
+          item
+          sx={{ marginTop: "20px", }}
         >
-          Learn React
-        </a>
-      </header>
-    </div>
+          <StickyHeadTable />
+        </Grid>
+      </Grid>
+    </>
   );
 }
 
