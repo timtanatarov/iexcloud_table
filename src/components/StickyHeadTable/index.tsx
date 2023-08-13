@@ -10,6 +10,12 @@ import TableRow from "@mui/material/TableRow";
 import Skeleton from "@mui/material/Skeleton";
 import { useGetStocksQuery } from "../../services/api";
 import { formatTimestamp } from "../../utils/formatTimestamp";
+import {
+  DragDropContext,
+  Draggable,
+  Droppable,
+  DropResult,
+} from "react-beautiful-dnd";
 
 interface Column {
   id: keyof Data;
@@ -65,6 +71,16 @@ export const StickyHeadTable = () => {
     setPage(0);
   };
 
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+
+    const newData = Array.from(allData);
+    const [movedRow] = newData.splice(result.source.index, 1);
+    newData.splice(result.destination.index, 0, movedRow);
+
+    setAllData(newData);
+  };
+
   if (error) {
     return <div>Непредвиденная ошибка</div>;
   }
@@ -77,49 +93,85 @@ export const StickyHeadTable = () => {
   return (
     <Paper sx={{ width: "100%", overflow: "hidden" }}>
       <TableContainer sx={{ maxHeight: 600 }}>
-        <Table stickyHeader aria-label="sticky table">
-          <TableHead>
-            <TableRow>
-              {columns.map((column) => (
-                <TableCell
-                  key={column.id}
-                  align={column.align}
-                  style={{ minWidth: column.minWidth }}
-                >
-                  {column.label}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {isLoading
-              ? Array.from({ length: rowsPerPage }).map((_, index) => (
-                  <TableRow key={index}>
-                    {columns.map((column) => (
-                      <TableCell key={column.id} align={column.align}>
-                        <Skeleton variant="text" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              : visibleData.map((row: Data) => (
-                  <TableRow hover role="checkbox" tabIndex={-1} key={row.symbol}>
-                    {columns.map((column) => {
-                      const value = row[column.id];
-                      return (
-                        <TableCell key={column.id} align={column.align}>
-                          {column.id === "lastUpdated"
-                            ? formatTimestamp(value as number)
-                            : column.format && typeof value === "number"
-                            ? column.format(value)
-                            : value}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <Table stickyHeader aria-label="sticky table">
+            <TableHead>
+              <TableRow>
+                {columns.map((column, index) => (
+                  <TableCell
+                    key={column.id}
+                    align={column.align}
+                    style={{ minWidth: column.minWidth }}
+                  >
+                    {column.label}
+                  </TableCell>
                 ))}
-          </TableBody>
-        </Table>
+              </TableRow>
+            </TableHead>
+            <Droppable droppableId="rows" direction="vertical">
+              {(provided) => (
+                <TableBody {...provided.droppableProps} ref={provided.innerRef}>
+                  {isLoading ? (
+                    Array.from({ length: rowsPerPage }).map((_, index) => (
+                      <TableRow key={index}>
+                        {columns.map((column) => (
+                          <TableCell key={column.id} align={column.align}>
+                            <Skeleton variant="text" />
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  ) : (
+                    <>
+                      {visibleData.map((row: Data, index) => (
+                        <Draggable
+                          key={row.symbol}
+                          draggableId={row.symbol}
+                          index={index}
+                          shouldRespectForcePress
+                        >
+                          {(provided) => (
+                            <TableRow
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              sx={{
+                                ...provided.draggableProps.style,
+                                width: "100%",
+                              }}
+                              hover
+                              role="checkbox"
+                              tabIndex={-1}
+                              key={row.symbol}
+                              ref={provided.innerRef}
+                            >
+                              {columns.map((column) => {
+                                const value = row[column.id];
+                                return (
+                                  <TableCell
+                                    key={column.id}
+                                    align={column.align}
+                                  >
+                                    {column.id === "lastUpdated"
+                                      ? formatTimestamp(value as number)
+                                      : column.format &&
+                                        typeof value === "number"
+                                      ? column.format(value)
+                                      : value}
+                                  </TableCell>
+                                );
+                              })}
+                            </TableRow>
+                          )}
+                        </Draggable>
+                      ))}
+                    </>
+                  )}
+                  {provided.placeholder}
+                </TableBody>
+              )}
+            </Droppable>
+          </Table>
+        </DragDropContext>
       </TableContainer>
       <TablePagination
         rowsPerPageOptions={[10, 25, 100]}
